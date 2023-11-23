@@ -46,3 +46,19 @@ To submit your final project, just send the instructor the URL of your project's
 If you set the repository to be *private*, then you may need to grant the instructor access to the repository.
 
 **NOTE:** It is recommended that you make your project's repository public unless you are sufficiently experienced with github's user permission system.
+
+# What goes in?
+
+Rings R with a G group action
+as example: closure of p-adic with the galois action
+
+Now consider module M over the underlying ring R together with a G action
+the two actions need be compatible, this is the only additional axiom
+
+This gives us objects in the catagory.
+
+For morphism, we consider R linear maps that are also equivariant.
+
+Now morphism between groups gives us morphism between the categories.
+
+We also want to unify with certain results in group cohomology?
