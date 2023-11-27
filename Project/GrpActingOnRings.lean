@@ -20,12 +20,6 @@ universe v u
 
 variable (M : Type u) [Monoid M]
 
--- class MulSemiringAction' (carrier : Type v) where
---   [isSemiring : Semiring carrier]
---   [isMulSemiringAction : MulSemiringAction M carrier]
-
--- #check Bundled (MulSemiringAction' M)
-
 structure MulSemiringActionCat where
   carrier : Type v
   [isSemiring : Semiring carrier]
@@ -196,85 +190,6 @@ def ρ (R : Type v) [Semiring R] [MulSemiringAction M R]:
     toFun := MulSemiringAction.toRingHom M R
     map_one' := this_for_map_one' M R
     map_mul' := this_for_map_mul' M R
-
--- @[simp]
--- def comp (R S: Type*) [Semiring R] [Semiring S] [MulSemiringAction M R] [MulSemiringAction M S] (f: MulSemiringActionHom M R S) :
---     ∀ m : M, ∀ r : R, f (m • r) = m • f r := by
---       intros m r
---       exact MulSemiringActionHom.map_smul f m r
-
--- cat comp is type comp
-
--- def toSemiringHom (R S : Type*) [Semiring R] [Semiring S]
---   [MulSemiringAction M R] [MulSemiringAction M S]
---     (f : MulSemiringActionHom M R S):
---       R →+* S where
---         toFun := f
---         map_one' := f.map_one
---         map_mul' := f.map_mul
---         map_zero' := f.map_zero
---         map_add' := f.map_add
-
--- instance (R S : MulSemiringActionCat M) :
---   Coe (R ⟶ S) (R →+* S) where
---     coe f := {
---       toFun := f.toFun
---       map_one' := f.map_one'
---       map_mul' := f.map_mul'
---       map_zero' := f.map_zero'
---       map_add' := f.map_add'
---     }
-
--- instance (R S : Type) [Semiring R] [Semiring S] :
---   Coe (R →+* S) (R ⟶ S) where
---     coe := sorry
-
--- This seems to be defeq??? not needed
--- instance (R S : MulSemiringActionCat.{v} M) :
---     Coe (R ⟶ S) (MulSemiringActionHom M R S) where
---       coe f := {
---         toFun := f.toFun
---         map_smul' := MulActionHom.map_smul' f.toMulActionHom
---         map_one' := f.map_one'
---         map_mul' := f.map_mul'
---         map_zero' := f.map_zero'
---         map_add' := f.map_add'
---       }
-
--- variable (R S : MulSemiringActionCat M) (f: R ⟶ S)
--- #check (f : MulSemiringActionHom M R S)
--- #check (f : R →+* S)
--- #check (f : R → S)
-
--- -- Does the same as SemiRingCat.coe_of?? not needed
--- -- @[simp]
--- theorem that (R : Type u) [Semiring R] (ρ : M →* ↑R →+* ↑R) :
---   ({ V := SemiRingCat.of R, ρ := ρ } : Action SemiRingCat (MonCat.of M)).V = SemiRingCat.of R := by
---     rfl
-
--- @[simp]
--- theorem bar (M : Type) [Monoid M] :
---     @Bundled.α Monoid (MonCat.of M) = M := by
---   rfl
-
--- @[simp]
--- theorem this (M : Type) [Monoid M] (X : MulSemiringActionCat M):
---   ((MonCat.of M) →* (MonCat.of (End (SemiRingCat.of X)))) = (M →* (End (SemiRingCat.of X))) := by
---     rfl
-
--- @[simp]
---   theorem tttt (M : Type) [Monoid M] (X Y : MulSemiringActionCat M) (m : (MonCat.of M)) (f : X ⟶ Y) (r : X):
---     (((ρ M X) m) ≫ SemiRingCat.ofHom f) r = ( (ρ M X) m ) ∘ f := sorry
-    -- (((ρ M X) m) ≫ SemiRingCat.ofHom f) r = f ( (ρ M X m) r ) := by sorry
-
--- @[simp]
--- theorem foo (M R : Type) [Monoid M] [Semiring R]
---   (ρ : (MonCat.of M) →* (MonCat.of (End (SemiRingCat.of R))))
---     (f : R →+* R) (m : M) :
---       (ρ m) ≫ SemiRingCat.ofHom f =
-  -- SemiRingCat.ofHom g ≫ SemiRingCat.ofHom f = SemiRingCat.ofHom (f.comp g) := by
-  --   rfl
-
 
 def F : MulSemiringActionCat M ⥤ Action SemiRingCat (MonCat.of M) where
   obj R := {
