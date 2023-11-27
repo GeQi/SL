@@ -78,7 +78,8 @@ instance {R : MulSemiringActionCat.{v} M} :
   (inferInstance : MulSemiringAction M R)
 
 @[ext]
-lemma ext {R S : MulSemiringActionCat.{v} M} {f₁ f₂ : R ⟶ S} (h : ∀ (r : R), f₁ r = f₂ r) : f₁ = f₂ :=
+lemma ext {R S : MulSemiringActionCat.{v} M} {f₁ f₂ : R ⟶ S} (h : ∀ (r : R), f₁ r = f₂ r) :
+    f₁ = f₂ :=
   FunLike.ext _ _ h
 
 instance hasForgetToSemiring : HasForget₂ (MulSemiringActionCat M) SemiRingCat where
@@ -133,7 +134,8 @@ def ofHom {R S : Type v} [Semiring R] [MulSemiringAction M R] [Semiring S]
 -- why simp 1100
 @[simp]
 theorem ofHom_apply {R S : Type v} [Semiring R] [MulSemiringAction M R]
-    [Semiring S] [MulSemiringAction M S] (f : MulSemiringActionHom M R S) (r : R) : ofHom M f r = f r :=
+    [Semiring S] [MulSemiringAction M S] (f : MulSemiringActionHom M R S) (r : R) :
+      ofHom M f r = f r :=
   rfl
 
 -- TODO?: Inhabited and Unique
@@ -144,14 +146,15 @@ theorem coe_of (R : Type v) [Semiring R] [MulSemiringAction M R] :
     (of M R : Type v) = R :=
   rfl
 
+-- or id_apply??
 @[simp]
-theorem id_apply {R: MulSemiringActionCat.{v} M} (r : R) :
-    (𝟙 R : R → R) r = r :=
+theorem coe_id {R: MulSemiringActionCat.{v} M}:
+    (𝟙 R : R → R) = id :=
   rfl
 
 @[simp]
 theorem coe_comp {R S T : MulSemiringActionCat.{v} M} (f : R ⟶ S) (g : S ⟶ T) :
-    (f ≫ g : R → T) = g ∘ f :=
+    f ≫ g = g ∘ f :=
   rfl
 
 @[simp]
@@ -164,14 +167,11 @@ lemma forget_map {R S : MulSemiringActionCat.{v} M} (f : R ⟶ S) :
     (forget (MulSemiringActionCat M)).map f = (f : R → S) :=
   rfl
 
-#check MulSemiringActionCat M
-#check (Action SemiRingCat (MonCat.of M))
-
 -- toRingHom is a monoid map
 -- TODO: add these to MulSemiringActionHom
 @[simp]
 theorem
-  this_for_map_one' (R : Type*) [Semiring R] [MulSemiringAction M R] :
+  this_for_map_one' (R : Type v) [Semiring R] [MulSemiringAction M R] :
     MulSemiringAction.toRingHom M R 1 = 1
   := by
     apply RingHom.ext
@@ -179,7 +179,7 @@ theorem
 
 @[simp]
 theorem
-  this_for_map_mul' (R : Type*) [Semiring R] [MulSemiringAction M R] :
+  this_for_map_mul' (R : Type v) [Semiring R] [MulSemiringAction M R] :
     ∀ (x y : M),
       MulSemiringAction.toRingHom M (↑R) (x * y) =
         MulSemiringAction.toRingHom M (↑R) x * MulSemiringAction.toRingHom M (↑R) y
@@ -191,7 +191,7 @@ theorem
     exact mul_smul x y r
 
 -- @[simp]
-def toRepHom (R : Type*) [Semiring R] [MulSemiringAction M R]:
+def ρ (R : Type v) [Semiring R] [MulSemiringAction M R]:
   M →* R →+* R where
     toFun := MulSemiringAction.toRingHom M R
     map_one' := this_for_map_one' M R
@@ -246,26 +246,26 @@ def toRepHom (R : Type*) [Semiring R] [MulSemiringAction M R]:
 -- #check (f : R →+* S)
 -- #check (f : R → S)
 
--- Does the same as SemiRingCat.coe_of?? not needed
+-- -- Does the same as SemiRingCat.coe_of?? not needed
+-- -- @[simp]
+-- theorem that (R : Type u) [Semiring R] (ρ : M →* ↑R →+* ↑R) :
+--   ({ V := SemiRingCat.of R, ρ := ρ } : Action SemiRingCat (MonCat.of M)).V = SemiRingCat.of R := by
+--     rfl
+
 -- @[simp]
-theorem that (R : Type u) [Semiring R] (ρ : M →* ↑R →+* ↑R) :
-  ({ V := SemiRingCat.of R, ρ := ρ } : Action SemiRingCat (MonCat.of M)).V = SemiRingCat.of R := by
-    rfl
+-- theorem bar (M : Type) [Monoid M] :
+--     @Bundled.α Monoid (MonCat.of M) = M := by
+--   rfl
 
-@[simp]
-theorem bar (M : Type) [Monoid M] :
-    @Bundled.α Monoid (MonCat.of M) = M := by
-  rfl
-
-@[simp]
-theorem this (M : Type) [Monoid M] (X : MulSemiringActionCat M):
-  ((MonCat.of M) →* (MonCat.of (End (SemiRingCat.of X)))) = (M →* (End (SemiRingCat.of X))) := by
-    rfl
+-- @[simp]
+-- theorem this (M : Type) [Monoid M] (X : MulSemiringActionCat M):
+--   ((MonCat.of M) →* (MonCat.of (End (SemiRingCat.of X)))) = (M →* (End (SemiRingCat.of X))) := by
+--     rfl
 
 -- @[simp]
 --   theorem tttt (M : Type) [Monoid M] (X Y : MulSemiringActionCat M) (m : (MonCat.of M)) (f : X ⟶ Y) (r : X):
---     (((toRepHom M X) m) ≫ SemiRingCat.ofHom f) r = ( (toRepHom M X) m ) ∘ f := sorry
-    -- (((toRepHom M X) m) ≫ SemiRingCat.ofHom f) r = f ( (toRepHom M X m) r ) := by sorry
+--     (((ρ M X) m) ≫ SemiRingCat.ofHom f) r = ( (ρ M X) m ) ∘ f := sorry
+    -- (((ρ M X) m) ≫ SemiRingCat.ofHom f) r = f ( (ρ M X m) r ) := by sorry
 
 -- @[simp]
 -- theorem foo (M R : Type) [Monoid M] [Semiring R]
@@ -276,47 +276,76 @@ theorem this (M : Type) [Monoid M] (X : MulSemiringActionCat M):
   --   rfl
 
 
-def functor : MulSemiringActionCat M ⥤ Action SemiRingCat (MonCat.of M) where
+def F : MulSemiringActionCat M ⥤ Action SemiRingCat (MonCat.of M) where
   obj R := {
     V := SemiRingCat.of R
-    ρ := toRepHom M R
+    ρ := ρ M R
   }
   map f := {
     hom := SemiRingCat.ofHom f
     comm := by
-      -- aesop
-      -- apply RingHom.ext
-      -- intros r
-      /-
-      case a
-      M : Type u
-      inst : Monoid M
-      X Y : MulSemiringActionCat M
-      f : X ⟶ Y
-      g : ↑(MonCat.of M)
-      r : ↑(SemiRingCat.of ↑X)
-      ⊢ ↑(↑(toRepHom M ↑X) g ≫ SemiRingCat.ofHom ↑f) r = ↑(SemiRingCat.ofHom ↑f ≫ ↑(toRepHom M ↑Y) g) r
-      -/
-
-
       intros m
       apply RingHom.ext
       intros r
       simp only [SemiRingCat.coe_of] at r ⊢
-
-      /-
-      case a
-      M : Type u
-      inst✝ : Monoid M
-      X✝ Y✝ : MulSemiringActionCat M
-      f : X✝ ⟶ Y✝
-      m : ↑(MonCat.of M)
-      r : ↑X✝
-      ⊢ ↑(↑(toRepHom M ↑X✝) m ≫ SemiRingCat.ofHom ↑f) r = ↑(SemiRingCat.ofHom ↑f ≫ ↑(toRepHom M ↑Y✝) m) r
-      -/
-
-      rw [MonCat.coe_of] at m
-      -- -- why `simp [bar] at m` not work?
-
-      sorry
+      change f (m • r) = m • f r
+      exact map_smul f m r
   }
+
+instance : CategoryTheory.Full (F M) where
+  preimage {R S} := fun
+    | .mk hom comm => {
+      toFun := hom
+      map_smul' := by
+        intros m r
+        change (SemiRingCat.ofHom (ρ M R m) ≫ hom) r
+          = (hom ≫ (SemiRingCat.ofHom (ρ M S m))) r
+        have h := comm m
+        change SemiRingCat.ofHom (ρ M R m) ≫ hom
+          = hom ≫ (SemiRingCat.ofHom (ρ M S m)) at h
+        have t:
+            (fun r => (SemiRingCat.ofHom (ρ M R m) ≫ hom) r)
+              = (fun r => (hom ≫ (SemiRingCat.ofHom (ρ M S m))) r) :=
+          FunLike.ext'_iff.mp (comm m)
+        apply congrFun t r
+      map_zero' := hom.map_zero'
+      map_add' := hom.map_add'
+      map_one' := hom.map_one'
+      map_mul' := hom.map_mul'
+    }
+
+instance : CategoryTheory.Faithful (F M) where
+  map_injective {_ _ a₁ a₂} h := by
+    ext r
+    calc
+      a₁ r = ((F M).map a₁).hom r := rfl
+      _ = ((F M).map a₂).hom r := congrFun (congrArg FunLike.coe (congrArg Action.Hom.hom h)) r
+      _ = a₂ r := rfl
+
+-- addd to other as well
+def assemble (R: Type v) [Semiring R] (ρ : M →* R →+* R) : MulSemiringAction M R where
+  smul m := ρ m
+  one_smul r := by
+    change ρ 1 r = r
+    simp only [map_one, RingHom.coe_one, id_eq, forall_const]
+  mul_smul g h r := by
+    change ρ (g * h) r = (ρ g * ρ h) r
+    simp only [map_mul, RingHom.coe_mul, Function.comp_apply, forall_const]
+  smul_zero g := by
+    change ρ g 0 = 0
+    simp only [map_zero]
+  smul_add g r s := by
+    change ρ g (r + s) = ρ g r + ρ g s
+    simp only [map_add]
+  smul_one g := by
+    change ρ g 1 = 1
+    simp only [map_one]
+  smul_mul g r s := by
+    change ρ g (r * s) = ρ g r * ρ g s
+    simp only [map_mul]
+
+instance : CategoryTheory.EssSurj (F M) where
+  mem_essImage
+    | .mk V ρ => Functor.obj_mem_essImage (F M) (@of _ _ _ _ (assemble M V ρ))
+
+theorem this : IsEquivalence (F M) := Equivalence.ofFullyFaithfullyEssSurj (F M)
