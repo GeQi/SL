@@ -20,6 +20,11 @@ universe v u
 
 variable (M : Type u) [Monoid M]
 
+-- How about:
+abbrev MonoidActionOnSemiring
+    (M R : Type*) [Monoid M] [Semiring R] :=
+  M →* R →+* R
+
 structure MulSemiringActionCat where
   carrier : Type v
   [isSemiring : Semiring carrier]
@@ -37,14 +42,10 @@ instance mulSemiringActionCategory :
   Hom R S := MulSemiringActionHom M R S
   id _ := MulSemiringActionHom.id M
   comp f g := MulSemiringActionHom.comp g f
-  -- id_comp := MulSemiringActionHom.id_comp
-  -- comp_id := MulSemiringActionHom.comp_id
-  -- assoc f g h := sorry
 
 instance {R S : MulSemiringActionCat.{v} M} :
     MulSemiringActionHomClass (R ⟶ S) M R S :=
   MulSemiringActionHom.instMulSemiringActionHomClassMulSemiringActionHomToDistribMulActionToDistribMulAction M R S
--- This naming is abhorrent
 
 instance moduleConcreteCategory :
     ConcreteCategory.{v} (MulSemiringActionCat.{v} M) where
@@ -58,10 +59,6 @@ instance moduleConcreteCategory :
       apply MulSemiringActionHom.ext
       exact congrFun h
   }
-    -- ⟨fun h => MulSemiringActionHom.ext (fun x => by
-    --   dsimp at h
-    --   rw [h])⟩
--- why different proof for module?
 
 instance {R : MulSemiringActionCat.{v} M} :
     Semiring ((forget (MulSemiringActionCat M)).obj R) :=
@@ -168,77 +165,28 @@ theorem
   this_for_map_one' (R : Type v) [Semiring R] [MulSemiringAction M R] :
     MulSemiringAction.toRingHom M R 1 = 1
   := by
-    apply RingHom.ext
+    ext
     simp only [MulSemiringAction.toRingHom_apply, one_smul, RingHom.coe_one, id_eq, forall_const]
 
 @[simp]
 theorem
   this_for_map_mul' (R : Type v) [Semiring R] [MulSemiringAction M R] :
     ∀ (x y : M),
-      MulSemiringAction.toRingHom M (↑R) (x * y) =
-        MulSemiringAction.toRingHom M (↑R) x * MulSemiringAction.toRingHom M (↑R) y
+      MulSemiringAction.toRingHom M R (x * y) =
+        MulSemiringAction.toRingHom M R x * MulSemiringAction.toRingHom M R y
   := by
     intros x y
-    apply RingHom.ext
+    ext r
     simp only [MulSemiringAction.toRingHom_apply, RingHom.coe_mul, Function.comp_apply]
-    intro r
     exact mul_smul x y r
 
--- @[simp]
-def ρ (R : Type v) [Semiring R] [MulSemiringAction M R]:
+def toEndHom (R : Type v) [Semiring R] [MulSemiringAction M R]:
   M →* R →+* R where
     toFun := MulSemiringAction.toRingHom M R
     map_one' := this_for_map_one' M R
     map_mul' := this_for_map_mul' M R
 
-def F : MulSemiringActionCat M ⥤ Action SemiRingCat (MonCat.of M) where
-  obj R := {
-    V := SemiRingCat.of R
-    ρ := ρ M R
-  }
-  map f := {
-    hom := SemiRingCat.ofHom f
-    comm := by
-      intros m
-      apply RingHom.ext
-      intros r
-      simp only [SemiRingCat.coe_of] at r ⊢
-      change f (m • r) = m • f r
-      exact map_smul f m r
-  }
-
-instance : CategoryTheory.Full (F M) where
-  preimage {R S} := fun
-    | .mk hom comm => {
-      toFun := hom
-      map_smul' := by
-        intros m r
-        change (SemiRingCat.ofHom (ρ M R m) ≫ hom) r
-          = (hom ≫ (SemiRingCat.ofHom (ρ M S m))) r
-        have h := comm m
-        change SemiRingCat.ofHom (ρ M R m) ≫ hom
-          = hom ≫ (SemiRingCat.ofHom (ρ M S m)) at h
-        have t:
-            (fun r => (SemiRingCat.ofHom (ρ M R m) ≫ hom) r)
-              = (fun r => (hom ≫ (SemiRingCat.ofHom (ρ M S m))) r) :=
-          FunLike.ext'_iff.mp (comm m)
-        apply congrFun t r
-      map_zero' := hom.map_zero'
-      map_add' := hom.map_add'
-      map_one' := hom.map_one'
-      map_mul' := hom.map_mul'
-    }
-
-instance : CategoryTheory.Faithful (F M) where
-  map_injective {_ _ a₁ a₂} h := by
-    ext r
-    calc
-      a₁ r = ((F M).map a₁).hom r := rfl
-      _ = ((F M).map a₂).hom r := congrFun (congrArg FunLike.coe (congrArg Action.Hom.hom h)) r
-      _ = a₂ r := rfl
-
--- addd to other as well
-def assemble (R: Type v) [Semiring R] (ρ : M →* R →+* R) : MulSemiringAction M R where
+def ofEndHom (R: Type v) [Semiring R] (ρ : M →* R →+* R) : MulSemiringAction M R where
   smul m := ρ m
   one_smul r := by
     change ρ 1 r = r
@@ -259,8 +207,52 @@ def assemble (R: Type v) [Semiring R] (ρ : M →* R →+* R) : MulSemiringActio
     change ρ g (r * s) = ρ g r * ρ g s
     simp only [map_mul]
 
+def F : MulSemiringActionCat M ⥤ Action SemiRingCat (MonCat.of M) where
+  obj R := {
+    V := SemiRingCat.of R
+    ρ := toEndHom M R
+  }
+  map f := {
+    hom := SemiRingCat.ofHom f
+    comm := by
+      intros m
+      apply RingHom.ext
+      intros r
+      simp only [SemiRingCat.coe_of] at r ⊢
+      change f (m • r) = m • f r
+      exact map_smul f m r
+  }
+
+instance : CategoryTheory.Full (F M) where
+  preimage {R S} := fun
+    | .mk hom comm => {
+      toFun := hom
+      map_smul' := by
+        intros m r
+        change (SemiRingCat.ofHom (toEndHom M R m) ≫ hom) r
+          = (hom ≫ (SemiRingCat.ofHom (toEndHom M S m))) r
+        have h := comm m
+        change SemiRingCat.ofHom (toEndHom M R m) ≫ hom
+          = hom ≫ (SemiRingCat.ofHom (toEndHom M S m)) at h
+        have t:
+            (fun r => (SemiRingCat.ofHom (toEndHom M R m) ≫ hom) r)
+              = (fun r => (hom ≫ (SemiRingCat.ofHom (toEndHom M S m))) r) :=
+          FunLike.ext'_iff.mp (comm m)
+        apply congrFun t r
+      map_zero' := hom.map_zero'
+      map_add' := hom.map_add'
+      map_one' := hom.map_one'
+      map_mul' := hom.map_mul'
+    }
+
+instance : CategoryTheory.Faithful (F M) where
+  map_injective {_ _ a₁ a₂} h := by
+    ext r
+    change ((F M).map a₁).hom r = ((F M).map a₂).hom r
+    exact congrFun (congrArg FunLike.coe (congrArg Action.Hom.hom h)) r
+
 instance : CategoryTheory.EssSurj (F M) where
   mem_essImage
-    | .mk V ρ => Functor.obj_mem_essImage (F M) (@of _ _ _ _ (assemble M V ρ))
+    | .mk V ρ => Functor.obj_mem_essImage (F M) (@of _ _ _ _ (ofEndHom M V ρ))
 
 theorem this : IsEquivalence (F M) := Equivalence.ofFullyFaithfullyEssSurj (F M)
